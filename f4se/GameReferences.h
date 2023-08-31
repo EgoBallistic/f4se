@@ -178,7 +178,7 @@ public:
 	virtual void	Unk_BD();
 	virtual void	Unk_BE();
 	virtual void	Unk_BF();
-	virtual void	Unk_C0();
+	virtual bool IsDead(bool a_notEssential) const;  //C0
 	virtual void	Unk_C1();
 	virtual void	Unk_C2();
 	virtual void	Unk_C3();
@@ -246,6 +246,14 @@ public:
 	DEFINE_MEMBER_FN(GetCarryWeight, float, 0x00D871F0);
 	// 7055D6CB4B64E11E63908512704F8871CEC025D3+11E
 	DEFINE_MEMBER_FN_1(ForEachAlias, void, 0x003F7960, IAliasFunctor * functor);
+	DEFINE_MEMBER_FN_1(SetAngleOnReference, void, 0x0040BD70, NiPoint3);
+	DEFINE_MEMBER_FN_1(SetNoCollision, void, 0x03EDEE0, bool)
+	DEFINE_MEMBER_FN(GetRefPersists, bool, 0x03F4DA0);
+	DEFINE_MEMBER_FN(SetRefPersists, void, 0x03F4E00, bool);
+	DEFINE_MEMBER_FN(GetDistanceFromPoint, float, 0x040F560)
+	DEFINE_MEMBER_FN(GetDistanceFromReference, float, 0x040F620, TESObjectREFR const *, bool, bool)
+	DEFINE_MEMBER_FN(GetGoldAmount, UInt32, 0x03FA8D0);
+
 };
 STATIC_ASSERT(offsetof(TESObjectREFR, parentCell) == 0xB8);
 STATIC_ASSERT(offsetof(TESObjectREFR, baseForm) == 0xE0);
@@ -261,7 +269,8 @@ public:
 	virtual void	Unk_C7();
 	virtual void	Unk_C8();
 	virtual void	Unk_C9();
-	virtual void	Unk_CA();
+	//virtual void	Unk_CA();
+	virtual void SetPosition(const NiPoint3& a_pos, bool a_updateCharController);
 	virtual void	Unk_CB();
 	virtual void	Unk_CC();
 	virtual void	Unk_CD();
@@ -309,7 +318,7 @@ public:
 	virtual void	Unk_F7();
 	virtual void	Unk_F8();
 	virtual void	Unk_F9();
-	virtual void	Unk_FA();
+	virtual void	PutCreatedPackage(TESForm* a_pack, bool a_tempPack, bool a_isACreatedPackage, bool a_allowFromFurniture);   // 0FA  TESPackage
 	virtual void	Unk_FB();
 	virtual void	Unk_FC();
 	virtual void	Unk_FD();
@@ -431,6 +440,8 @@ public:
 
 		MEMBER_FN_PREFIX(MiddleProcess);
 		DEFINE_MEMBER_FN(UpdateEquipment, void, 0x00E60860, Actor * actor, UInt32 flags); 
+		DEFINE_MEMBER_FN(GetPreventCombat, bool, 0x00E793E0, void);
+		DEFINE_MEMBER_FN(SetPreventCombat, void, 0x00E79400, bool a_state);
 	};
 	MiddleProcess * middleProcess;					// 300
 	UInt64	unk308[(0x338-0x308)/8];
@@ -448,6 +459,43 @@ public:
 		float	unk04;		// 04
 		float	unk08;		// 08
 		float	unk0C;		// 0C
+	};
+
+	enum BOOL_FLAGS
+	{
+		kNone = 0,
+		kScenePackage = 1 << 0,
+		kIsAMount = 1 << 1,
+		kIsMountPointClear = 1 << 2,
+		kIsGettingOnOffMount = 1 << 3,
+		kInRandomScene = 1 << 4,
+		kNoBleedoutRecovery = 1 << 5,
+		kInBleedoutAnimation = 1 << 6,
+		kCanDoFavor = 1 << 7,
+		kShouldAnimGraphUpdate = 1 << 8,
+		kCanSpeakToEssentialDown = 1 << 9,
+		kBribedByPlayer = 1 << 10,
+		kAngryWithPlayer = 1 << 11,
+		kIsTresspassing = 1 << 12,
+		kCanSpeak = 1 << 13,
+		kIsInKillMove = 1 << 14,
+		kAttackOnSight = 1 << 15,
+		kIsCommandedActor = 1 << 16,
+		kForceOneAnimGraphUpdate = 1 << 17,
+		kEssential = 1 << 18,
+		kProtected = 1 << 19,
+		kAttackingDisabled = 1 << 20,
+		kCastingDisabled = 1 << 21,
+		kSceneHeadtrackRotation = 1 << 22,
+		kForceIncMinBoneUpdate = 1 << 23,
+		kCrimeSearch = 1 << 24,
+		kMovingIntoLoadedArea = 1 << 25,
+		kDoNotShowOnStealthMeter = 1 << 26,
+		kMovementBlocked = 1 << 27,
+		kAllowInstantFurniturePopInPlayerCell = 1 << 28,
+		kForceAnimGraphUpdate = 1 << 29,
+		kCheckAddEffectDualCast = 1 << 30,
+		kUnderwater = 1 << 31,
 	};
 
 	tArray<Data350>	unk350;				// 350
@@ -470,6 +518,18 @@ public:
 	DEFINE_MEMBER_FN(QueueUpdate, void, 0x00D8A1F0, bool bDoFaceGen, UInt32 unk2, bool DoQueue, UInt32 flags); // 0, 0, 1, 0
 	DEFINE_MEMBER_FN(IsHostileToActor, bool, 0x00D91080, Actor * actor);
 	DEFINE_MEMBER_FN(UpdateEquipment, void, 0x00408270); // TESObjectREFR::ReplaceModel
+	DEFINE_MEMBER_FN(DisableCollision, void, 0x0D73AB0, void);
+	DEFINE_MEMBER_FN(EnableCollision, void, 0x0D73A20, void);
+	DEFINE_MEMBER_FN(StopInteractingQuick, void, 0x0E0EAA0, bool flag1, bool flag2, bool a_initializeNodes);
+	DEFINE_MEMBER_FN(StopMoving, void, 0x0DAEDA0, float a_decelerationMult); // default 1.0f
+	DEFINE_MEMBER_FN(SetGhost, void, 0x0D74000, bool a_ghost);
+	DEFINE_MEMBER_FN(GetGhost, bool, 0x0D74000, void);
+	DEFINE_MEMBER_FN(SetRestrained, void, 0x0D8A0D0, bool a_restrained);
+	DEFINE_MEMBER_FN(ClearLookAtTarget, void, 0x0DAFED0, void);
+	DEFINE_MEMBER_FN(TurnOffHeadtracking, void, 0x0DADF50, void);
+	DEFINE_MEMBER_FN(GetSex, unsigned char, 0x0D74610, void);
+	DEFINE_MEMBER_FN(GetLevel, UInt32, 0x0D79E90, void);
+
 };
 STATIC_ASSERT(offsetof(Actor, equipData) == 0x428);
 STATIC_ASSERT(offsetof(Actor, uiFlags) == 0x43C);
@@ -517,6 +577,9 @@ public:
 	UInt64	unkB68[(0xD00-0xB80)/8];	// B78
 	tArray<BGSCharacterTint::Entry*> * tints;	// D00
 	UInt64	unkC90[(0xE10-0xCF8)/8];	// CF8
+
+	MEMBER_FN_PREFIX(PlayerCharacter);
+	DEFINE_MEMBER_FN(UpdatePlayer3d, void, 0x0EA0630, void);
 };
 
 extern RelocPtr <PlayerCharacter*> g_player;
